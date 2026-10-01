@@ -1,10 +1,8 @@
 # 云阙三国 · 群星觉醒
 
-原创三国幻想单人卡牌 RPG。浏览器本地存档，无充值、无体力限制。
+原创三国幻想单人角色 RPG。浏览器本地存档，无充值、无体力限制。
 
 [在线体验](https://yunque-sanguo.dingikang.chatgpt.site)（当前站点需所有者登录）
-
-![云阙三国游戏实机画面](docs/images/yunque-sanguo.jpg)
 
 ## 核心玩法
 
@@ -22,7 +20,7 @@
 
 ## 技术与结构
 
-React + TypeScript + Vinext，CSS动画、Canvas 2D程序化战斗特效，Web Audio合成音效。
+React + TypeScript + Vinext + Three.js。透视相机、真实三维战台与光照；24名原创透明角色使用可变形网格呈现2.5D动作。Web Audio合成挥击与命中音效；WebGL不可用时回退到二维兼容战场。
 
 | 文件 | 职责 |
 |---|---|
@@ -30,11 +28,13 @@ React + TypeScript + Vinext，CSS动画、Canvas 2D程序化战斗特效，Web A
 | `game/state.ts` | 招募、保底、成长、奖励、存档 |
 | `game/battle.ts` | 带种子的纯战斗模拟与事件时间线 |
 | `game/BattleView.tsx` | 事件播放、血量、怒气、战斗控制 |
-| `game/effects.tsx` | 六种元素的Canvas特效 |
+| `game/BattleStage.tsx` | Three.js战台、角色网格、镜头与接触特效 |
+| `game/choreography.ts` | 前摇、接触、命中停顿、击退与收招的共享时间轴 |
+| `game/effects.tsx` | 兼容战场的六种元素Canvas特效 |
 | `game/Game.tsx` | 游戏主城与系统页面、资源联动 |
-| `game/ui.tsx` | 卡牌、头像、弹窗与基础展示 |
+| `game/ui.tsx` | 全身角色展示、头像、弹窗与基础展示 |
 | `game/audio.ts` | 原创合成音效 |
-| `app/globals.css` | 游戏界面与响应式样式 |
+| `app/globals.css`、`app/characters.css` | 游戏界面、角色与响应式样式 |
 | `public/art/` | AI生成的原创主城、角色与肖像图集 |
 
 ## 本地运行
@@ -46,8 +46,24 @@ pnpm install
 pnpm dev
 ```
 
-生产构建：`pnpm build`。核心逻辑验证：`node tests/game.mjs`。本地进度键为`yunque-sanguo-v2`；清除站点数据会删除进度。每日奖励按北京时间刷新。
+生产构建：`pnpm build`。核心逻辑验证：`node tests/game.mjs`；动作与视锥验证：`node tests/choreography.mjs`。本地进度键为`yunque-sanguo-v2`；清除站点数据会删除进度。每日奖励按北京时间刷新。
 
 ## 原型边界
 
-这是可玩的前端原型，不包含联网对战、账号云存档或付费系统。战斗在开始时计算为事件序列，速度、暂停和跳过仅改变播放，不改变结果。战斗角色使用原创肖像卡牌配合位移与粒子演出，尚不是骨骼角色动画。
+这是可玩的前端原型，不包含联网对战、账号云存档或付费系统。战斗在开始时计算为事件序列，速度、暂停和跳过仅改变播放，不改变结果。战台、透视、光照和镜头使用真实三维渲染；人物是带髋部、躯干、武器侧变形的二维贴图网格，属于2.5D表现，并不是可以任意绕背观看的完整3D骨骼人物模型。保留低动态模式、系统减少动态效果以及WebGL失败回退。
+
+## 本轮打击演出
+
+- 武器动作按长枪、刀刃、重击、弓与术法区分
+- 蓄力前摇 → 近身/远射 → 接触 → 65–130ms命中停顿 → 击退/收招
+- 血条、伤害数字、音效与击退在同一接触时刻触发
+- 方向性斩弧、枪芒、冲击环、落地阴影与轻量镜头震动
+- 暂停和后台冻结共享时间轴；倍速同时作用于动作与结果播放
+
+2026-10-01：类型检查和生产构建通过；核心战斗与动作数值回归通过。当前执行环境无法向云浏览器暴露本地预览，因此未完成真实桌面/手机视觉试玩验收。
+
+## 完整美术资源与源码打包
+
+24名角色的WebP图片直接包含在`public/art/characters/`。三张较大的原始PNG图片按原始字节无损分片保存于`assets/source-art/`，并附有每片及完整图片的SHA-256校验清单。`pnpm dev`和`pnpm build`会自动校验并重组到`public/art/`，无需额外下载，画质与原始图片完全一致。也可先手动运行`node scripts/restore-art.mjs`。完整PNG是可再生文件，不提交重复副本。
+
+源码对应已验证的Sites版本`0e917df10459cb4de9736a34759a045c783337f0`；本仓库仅增加上述可复现资源打包方式与缓存忽略规则，游戏逻辑保持一致。
