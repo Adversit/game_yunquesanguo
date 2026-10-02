@@ -45,5 +45,8 @@ next-env.d.ts
 /outputs/
 /work/
 
-# TypeScript incremental build cache
+# Generated build cache and losslessly reconstructed long music files
 *.tsbuildinfo
+*.restore-tmp
+/public/audio/music/battle.mp3
+/public/audio/music/city.mp3

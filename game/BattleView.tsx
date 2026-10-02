@@ -5,16 +5,17 @@ import {HEROES,STAGES,CHAPTERS,FACTION_COLOR} from './data';
 import {Save} from './state';
 import {simulate,BattleResult} from './battle';
 import Character from './Character';
-import {sound,combatSound,stopCombatAudio} from './audio';
+import {sound,combatSound,stopCombatAudio,setMusicPaused} from './audio';
 import {actionTiming} from './choreography';
 const BattleStage=lazy(()=>import('./BattleStage'));
 class StageBoundary extends Component<{children:ReactNode;onError:()=>void},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return {failed:true};}componentDidCatch(){this.props.onError();}render(){return this.state.failed?null:this.props.children;}}
 import {useReducedMotion} from './useMotion';
 import Effects,{ELEMENT_COLORS as colors,arenaPosition as position} from './effects';
 const statusNames:Record<string,string>={burn:'灼烧',poison:'中毒',stun:'眩晕',silence:'沉默',attack:'攻击↑',defdown:'防御↓',taunt:'嘲讽'};
-export default function BattleView({save,stageId,onFinish,onExit}:{save:Save;stageId:number;onFinish:(r:BattleResult)=>void;onExit:()=>void}){
+export default function BattleView({save,stageId,onFinish,onExit,audioEnabled,onToggleAudio}:{save:Save;audioEnabled:boolean;onToggleAudio:()=>void;stageId:number;onFinish:(r:BattleResult)=>void;onExit:()=>void}){
  const [result]=useState(()=>simulate(save,stageId));
- const [index,setIndex]=useState(0),[speed,setSpeed]=useState(1),[paused,setPaused]=useState(false),[muted,setMuted]=useState(!save.sound),[cinematic,setCinematic]=useState(save.effects!=='reduced'),[hidden,setHidden]=useState(false);
+ const [index,setIndex]=useState(0),[speed,setSpeed]=useState(1),[paused,setPaused]=useState(false),[cinematic,setCinematic]=useState(save.effects!=='reduced'),[hidden,setHidden]=useState(false);
+ const muted=!audioEnabled;
  const systemReduced=useReducedMotion(),reduced=systemReduced||save.effects==='reduced';
  const done=useRef(false),finishRef=useRef(onFinish);finishRef.current=onFinish;
  const event=result.events[index],st=STAGES[stageId],isBig=['combo','boss'].includes(event.kind),showCinematic=cinematic&&!reduced;
@@ -23,7 +24,7 @@ export default function BattleView({save,stageId,onFinish,onExit}:{save:Save;sta
  const [contactedIndex,setContactedIndex]=useState(-1),[introDoneIndex,setIntroDoneIndex]=useState(-1),[stageReady,setStageReady]=useState(false),[stageFailed,setStageFailed]=useState(false);
  if(clockIndex.current!==index){clockIndex.current=index;clock.current=0;}
  const frozen=paused||hidden||(!stageReady&&!stageFailed);
- useEffect(()=>{if(frozen||muted)stopCombatAudio();return()=>stopCombatAudio();},[frozen,muted]);
+ useEffect(()=>{setMusicPaused(paused||hidden);if(frozen||muted)stopCombatAudio();return()=>{stopCombatAudio();setMusicPaused(false);};},[paused,hidden,frozen,muted]);
  const timing=actionTiming(event,showCinematic,reduced),contacted=timing.contact===0||contactedIndex===index;
  const displayUnits=contacted?event.units:(result.events[Math.max(0,index-1)]?.units||event.units);
  useEffect(()=>{const sync=()=>setHidden(document.hidden);sync();document.addEventListener('visibilitychange',sync);return()=>document.removeEventListener('visibilitychange',sync);},[]);
@@ -46,7 +47,7 @@ export default function BattleView({save,stageId,onFinish,onExit}:{save:Save;sta
  const actionKind=event.kind==='attack'?'普攻':event.kind==='combo'?'羁绊合击':event.kind==='boss'?'首领战法':event.kind==='skill'?'怒气战法':'战况';
  return <div className={`battle-screen character-battle ${stageReady?'stage-ready':''} ${stageFailed?'stage-fallback':''} ${frozen?'battle-paused':''} ${reduced?'reduced-motion':''}`} style={{'--event-color':colors[event.element],'--tempo':`${1/speed}`} as CSSProperties}>
   <div className="battle-background"/><div className="battle-atmosphere" aria-hidden="true"/>
-  <div className="battle-top"><button className="icon-button" onClick={onExit} aria-label="撤退（不消耗资源）"><Flag size={21}/></button><div><span className="eyebrow">{CHAPTERS[st.chapter].name} / {st.chapter+1}-{stageId%6+1}</span><h2>{st.name}</h2></div><div className="round-counter"><b>{Math.min(event.round||1,20).toString().padStart(2,'0')}</b><span> / 20 回合</span></div><button className="icon-button" onClick={()=>setMuted(!muted)} aria-label="切换声音">{muted?<VolumeX/>:<Volume2/>}</button></div>
+  <div className="battle-top"><button className="icon-button" onClick={onExit} aria-label="撤退（不消耗资源）"><Flag size={21}/></button><div><span className="eyebrow">{CHAPTERS[st.chapter].name} / {st.chapter+1}-{stageId%6+1}</span><h2>{st.name}</h2></div><div className="round-counter"><b>{Math.min(event.round||1,20).toString().padStart(2,'0')}</b><span> / 20 回合</span></div><button className="icon-button" onClick={onToggleAudio} aria-label="切换声音">{muted?<VolumeX/>:<Volume2/>}</button></div>
   <div className="battle-factions"><span>云阙军 <small>{alive(0)} / 6</small></span><Swords/><span>{st.boss?'首领军阵':'敌方军阵'} <small>{alive(1)} / 6</small></span></div>
   <div className="battle-field" ref={fieldRef}>
    {!stageReady&&!stageFailed&&<div className="battle-loading" role="status">武将集结中…</div>}

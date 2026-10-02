@@ -1,6 +1,6 @@
 import {HEROES,BONDS,STAGES,Hero} from './data';
 export interface Owned {id:number;level:number;stars:number;ascend:number;shards:number}
-export interface Save {version:2;name:string;started:boolean;gold:number;exp:number;tickets:number;stones:number;roster:Record<number,Owned>;shardBank:Record<number,number>;formation:number[];cleared:Record<number,number>;pulls:number;pity:number;daily:string;claimed:string[];wins:number;upgrades:number;sound:boolean;dev:boolean;effects?:'full'|'reduced'}
+export interface Save {version:2;name:string;started:boolean;gold:number;exp:number;tickets:number;stones:number;roster:Record<number,Owned>;shardBank:Record<number,number>;formation:number[];cleared:Record<number,number>;pulls:number;pity:number;daily:string;claimed:string[];wins:number;upgrades:number;sound:boolean;dev:boolean;effects?:'full'|'reduced';musicVolume?:number;sfxVolume?:number}
 export const SAVE_KEY='yunque-sanguo-v2';
 export const own=(id:number):Owned=>({id,level:1,stars:1,ascend:0,shards:0});
 export function fresh():Save{return{version:2,name:'云游少主',started:false,gold:18000,exp:240,tickets:20,stones:30,shardBank:{},roster:Object.fromEntries([0,1,2,4,5,13].map(id=>[id,own(id)])),formation:[2,1,5,0,4,13],cleared:{},pulls:0,pity:0,daily:'',claimed:[],wins:0,upgrades:0,sound:true,dev:false};}

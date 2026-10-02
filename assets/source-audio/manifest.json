@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "path": "public/audio/music/battle.mp3",
+      "size": 1870829,
+      "sha256": "a419dae0bb3bc20037e3d768055dd8dfbe6ee0ec3f9badeb7bc583a23594dcd2",
+      "parts": [
+        {
+          "path": "assets/source-audio/battle.mp3.part000",
+          "size": 307200,
+          "sha256": "e1c089e3483cb48cc9a7670963a7b5e7f165ecfb2fea20abbf09a695fd1ec6db"
+        },
+        {
+          "path": "assets/source-audio/battle.mp3.part001",
+          "size": 307200,
+          "sha256": "b7685074b0780db63663e6de21e76dace83d73db74fcea5ee6d9cb459487493f"
+        },
+        {
+          "path": "assets/source-audio/battle.mp3.part002",
+          "size": 307200,
+          "sha256": "be543d01268f1ed268ed1ac9dd3be85bee591f8b754a729a614f6defec1b85f6"
+        },
+        {
+          "path": "assets/source-audio/battle.mp3.part003",
+          "size": 307200,
+          "sha256": "df4c3ef24d379ef99dc55fac32c1e6889a9c9ffd2416068ebdf47de74e8e419e"
+        },
+        {
+          "path": "assets/source-audio/battle.mp3.part004",
+          "size": 307200,
+          "sha256": "79b0f9f73c06f1d2ac4fb0d82a10eb6bc589d416067d52266d25f4624d7b1a4c"
+        },
+        {
+          "path": "assets/source-audio/battle.mp3.part005",
+          "size": 307200,
+          "sha256": "dc8a6e3f237f41ff870201f6aa5fd9c088addfa0dfa4fe92853f6b53e7d6b34d"
+        },
+        {
+          "path": "assets/source-audio/battle.mp3.part006",
+          "size": 27629,
+          "sha256": "95c636f57e11074569230419c244fe275b0d9465d1e6171f1c3de0db089fc71b"
+        }
+      ]
+    },
+    {
+      "path": "public/audio/music/city.mp3",
+      "size": 1369591,
+      "sha256": "256a446476af7b3b500cf37eb9be5353751bcdae0ae2b1d5157c2528306e9404",
+      "parts": [
+        {
+          "path": "assets/source-audio/city.mp3.part000",
+          "size": 307200,
+          "sha256": "76c12d8d56a02064308760b042b7da6e2265e612bbb510bd2a141dce174aa42a"
+        },
+        {
+          "path": "assets/source-audio/city.mp3.part001",
+          "size": 307200,
+          "sha256": "70e616191b56ffd1990e4ed871a41cb4acea9bb16ceed66050436ac4ba5cd151"
+        },
+        {
+          "path": "assets/source-audio/city.mp3.part002",
+          "size": 307200,
+          "sha256": "bae121c008dbadcda12446524c0e8f152568ff2eca068a3e9aa391fef4e4808a"
+        },
+        {
+          "path": "assets/source-audio/city.mp3.part003",
+          "size": 307200,
+          "sha256": "c5f87e157d2ac2f20aa1116a2f7acb8d5925562f68a003b5d57c351976e53a73"
+        },
+        {
+          "path": "assets/source-audio/city.mp3.part004",
+          "size": 140791,
+          "sha256": "cb0cae9850ee223ccb8a156943803297196c891010d8f267bef4bce783b6b1ba"
+        }
+      ]
+    }
+  ]
+}
