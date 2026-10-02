@@ -21,6 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
+      <head><link rel="preload" as="image" href="/art/optimized/citadel.webp"/><link rel="preload" as="image" href="/art/optimized/zhaoyun.webp"/></head>
       <body className="antialiased">{children}</body>
     </html>
   );

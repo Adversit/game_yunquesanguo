@@ -24,7 +24,7 @@ export function poseFor(u:Unit,e:BattleEvent,elapsed:number,cinematic:boolean,re
  if(active&&relative>=0){
   const weapon=weaponStyle(u.hero),melee=weapon==='spear'||weapon==='blade'||weapon==='heavy',attackEnd=timing.contact-timing.intro;
   const wind=smooth(relative/170),rush=smooth((relative-170)/Math.max(1,attackEnd-170)),recover=smooth(post/400);
-  if(melee&&target){const dest=worldPosition(target),dx=dest.x-home.x,dz=dest.z-home.z,d=Math.hypot(dx,dz),reach=Math.max(0,d-1.22),travel=rush*(1-recover);out.x+=dx/d*reach*travel;out.z+=dz/d*reach*travel;out.x-=direction*.22*wind*(1-rush);out.y=Math.sin(travel*Math.PI)*(weapon==='heavy'?.17:.09);}
+  if(melee&&target){const dest=worldPosition(target),dx=dest.x-home.x,dz=dest.z-home.z,d=Math.hypot(dx,dz),reach=Math.max(0,d-(weapon==='spear'?2.1:1.22)),travel=rush*(1-recover);out.x+=dx/d*reach*travel;out.z+=dz/d*reach*travel;out.x-=direction*.22*wind*(1-rush);out.y=Math.sin(travel*Math.PI)*(weapon==='heavy'?.17:.09);}
   out.bend=(-.17*wind*(1-rush)+.28*rush)*(1-recover);
   out.swing=(-.7*wind*(1-rush)+1.05*rush)*(1-recover);
   out.step=Math.sin(clamp((relative-160)/280)*Math.PI*2)*(1-recover);

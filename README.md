@@ -2,7 +2,7 @@
 
 原创三国幻想单人角色 RPG。浏览器本地存档，无充值、无体力限制。
 
-[在线体验](https://yunque-sanguo.dingikang.chatgpt.site)（当前站点需所有者登录）
+[在线体验](https://yunque-sanguo.dingikang.chatgpt.site)
 
 ## 核心玩法
 
@@ -20,7 +20,7 @@
 
 ## 技术与结构
 
-React + TypeScript + Vinext + Three.js。透视相机、真实三维战台与光照；24名原创透明角色使用可变形网格呈现2.5D动作。Web Audio合成挥击与命中音效；WebGL不可用时回退到二维兼容战场。
+React + TypeScript + Vinext + Three.js。透视相机、真实三维战台与光照；24名原创武将由完整有体积的低多边形网格组成，身体、头部、肩肘、髋膝和武器分别设关节枢轴，能够转身、摆臂、挥击和倒地。Kenney CC0实录音效包与Web Audio缓冲播放、限幅混音；WebGL不可用时回退到二维兼容战场。
 
 | 文件 | 职责 |
 |---|---|
@@ -28,12 +28,15 @@ React + TypeScript + Vinext + Three.js。透视相机、真实三维战台与光
 | `game/state.ts` | 招募、保底、成长、奖励、存档 |
 | `game/battle.ts` | 带种子的纯战斗模拟与事件时间线 |
 | `game/BattleView.tsx` | 事件播放、血量、怒气、战斗控制 |
-| `game/BattleStage.tsx` | Three.js战台、角色网格、镜头与接触特效 |
+| `game/BattleStage.tsx` | Three.js战台、实体角色、镜头与接触特效 |
+| `game/heroModels.ts` | 24名原创实体3D武将、关节枢轴与武器动作 |
+| `game/HeroModelView.tsx` | 可360°旋转的武将详情模型 |
+| `game/ultimateEffects.ts` | 蓄力、爆发、晶簇、光环等体积大招演出 |
 | `game/choreography.ts` | 前摇、接触、命中停顿、击退与收招的共享时间轴 |
 | `game/effects.tsx` | 兼容战场的六种元素Canvas特效 |
 | `game/Game.tsx` | 游戏主城与系统页面、资源联动 |
 | `game/ui.tsx` | 全身角色展示、头像、弹窗与基础展示 |
-| `game/audio.ts` | 原创合成音效 |
+| `game/audio.ts` | CC0战斗音频缓存、解码、播放与限幅混音 |
 | `app/globals.css`、`app/characters.css` | 游戏界面、角色与响应式样式 |
 | `public/art/` | AI生成的原创主城、角色与肖像图集 |
 
@@ -50,7 +53,7 @@ pnpm dev
 
 ## 原型边界
 
-这是可玩的前端原型，不包含联网对战、账号云存档或付费系统。战斗在开始时计算为事件序列，速度、暂停和跳过仅改变播放，不改变结果。战台、透视、光照和镜头使用真实三维渲染；人物是带髋部、躯干、武器侧变形的二维贴图网格，属于2.5D表现，并不是可以任意绕背观看的完整3D骨骼人物模型。保留低动态模式、系统减少动态效果以及WebGL失败回退。
+这是可玩的前端原型，不包含联网对战、账号云存档或付费系统。战斗在开始时计算为事件序列，速度、暂停和跳过仅改变播放，不改变结果。战台和武将均为真实三维几何体。人物采用原创风格化低多边形关节模型，而非贴图平面；并非商业游戏的高精度扫描、动作捕捉或复杂皮肤蒙皮模型。原有二维立绘只保留在群英录、招募及WebGL不支持时的兼容展示。武将详情可拖动或点击左右按钮旋转查看。保留低动态模式、系统减少动态效果以及WebGL失败回退。
 
 ## 本轮打击演出
 
@@ -60,10 +63,19 @@ pnpm dev
 - 方向性斩弧、枪芒、冲击环、落地阴影与轻量镜头震动
 - 暂停和后台冻结共享时间轴；倍速同时作用于动作与结果播放
 
-2026-10-01：类型检查和生产构建通过；核心战斗与动作数值回归通过。当前执行环境无法向云浏览器暴露本地预览，因此未完成真实桌面/手机视觉试玩验收。
+## 2026-10-02 加载优化与授权
 
-## 完整美术资源与源码打包
+- 首屏三张原始PNG共9,393,796字节；改为两张WebP和单独头像后为681,718字节，图像传输量降低92.7%
+- 24张兼容立绘共8,918,600字节，缩至1,255,100字节；头像按人物拆分，避免单个头像下载整图集
+- 实体战斗角色由本地代码构建，无角色贴图/模型文件网络请求；进入征战页时预取战斗代码，战台就绪后才启动回合时间轴
+- 八个Kenney CC0 MP3音效共84,986字节，预加载、解码后在当前会话复用，暂停/静音时停止播放
+- 官方音效来源：[RPG Audio](https://kenney.nl/assets/rpg-audio)、[Impact Sounds](https://kenney.nl/assets/impact-sounds)、[Sci-fi Sounds](https://kenney.nl/assets/sci-fi-sounds)
+- 授权：[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)，许可副本和逐文件来源在public/audio/kenney/；未使用商业三国游戏素材
 
-24名角色的WebP图片直接包含在`public/art/characters/`。三张较大的原始PNG图片按原始字节无损分片保存于`assets/source-art/`，并附有每片及完整图片的SHA-256校验清单。`pnpm dev`和`pnpm build`会自动校验并重组到`public/art/`，无需额外下载，画质与原始图片完全一致。也可先手动运行`node scripts/restore-art.mjs`。完整PNG是可再生文件，不提交重复副本。
+验证命令：node tests/game.mjs、node tests/choreography.mjs、node tests/models.mjs。实体模型已通过Blender离线三维渲染检查（不是浏览器截图）；音频完成格式解码、时长、峰值与字节检查。当前执行环境无法向云浏览器暴露本地预览，因此未完成真实桌面/手机视觉试玩和主观听感验收。加载改进以字节与代码路径测量为准，未声称实际用户网络耗时。
 
-源码对应已验证的Sites版本`0e917df10459cb4de9736a34759a045c783337f0`；本仓库仅增加上述可复现资源打包方式与缓存忽略规则，游戏逻辑保持一致。
+## 源码同步
+
+2026-10-02本次同步时，仓库已包含v4源码；公共站点仍为v3，v4公开部署尚待确认。
+
+此版本对应Sites源码`a1e8f96e8eb759854f4aef2db8c44f1488a0e2ce`。所有当前使用的图片、模型生成代码和授权音效均直接包含在仓库中。旧版大PNG及其分片重建步骤已退役；直接运行上述安装、开发和构建命令即可。

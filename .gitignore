@@ -47,9 +47,3 @@ next-env.d.ts
 
 # TypeScript incremental build cache
 *.tsbuildinfo
-
-# Restored losslessly from assets/source-art before dev/build
-/public/art/citadel.png
-/public/art/portraits.png
-/public/art/zhaoyun.png
-*.restore-tmp

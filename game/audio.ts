@@ -1,16 +1,28 @@
-let ctx:AudioContext|undefined;
-export function sound(kind:'click'|'attack'|'skill'|'combo'|'pull'|'rare'|'win'|'lose',enabled=true){if(!enabled||typeof window==='undefined')return;try{ctx??=new AudioContext();if(ctx.state==='suspended')void ctx.resume();const t=ctx.currentTime;const notes=kind==='win'?[523,659,784,1046]:kind==='rare'?[330,440,660,880,1320]:kind==='combo'?[110,220,440,880]:kind==='lose'?[330,277,220]:kind==='skill'?[220,440,660]:kind==='pull'?[220,330,440]:kind==='attack'?[160,70]:[700];notes.forEach((hz,i)=>{const osc=ctx!.createOscillator(),gain=ctx!.createGain();osc.type=kind==='attack'?'sawtooth':kind==='combo'?'triangle':'sine';osc.frequency.setValueAtTime(hz,t+i*.07);gain.gain.setValueAtTime(0,t+i*.07);gain.gain.linearRampToValueAtTime(kind==='attack'?.055:.07,t+i*.07+.012);gain.gain.exponentialRampToValueAtTime(.001,t+i*.07+.25);osc.connect(gain);gain.connect(ctx!.destination);osc.start(t+i*.07);osc.stop(t+i*.07+.28);});}catch{}}
-
-/** Short synthesized foley, timed to contact rather than the beginning of a turn. */
-export function combatSound(kind:'swing'|'impact'|'critical'|'heal',element:string,enabled=true){
- if(!enabled||typeof window==='undefined')return;
- try{
-  ctx??=new AudioContext();if(ctx.state==='suspended')void ctx.resume();const t=ctx.currentTime;
-  if(kind==='heal'){sound('skill',enabled);return;}
-  const duration=kind==='swing'?.13:kind==='critical'?.27:.19;
-  const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*duration),ctx.sampleRate),data=buffer.getChannelData(0);
-  for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(1-i/data.length);
-  const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();source.buffer=buffer;filter.type=kind==='swing'?'bandpass':'lowpass';filter.frequency.setValueAtTime(kind==='swing'?1800:element==='ice'?2900:1400,t);filter.frequency.exponentialRampToValueAtTime(kind==='swing'?600:180,t+duration);gain.gain.setValueAtTime(kind==='swing'?.028:kind==='critical'?.12:.075,t);gain.gain.exponentialRampToValueAtTime(.001,t+duration);source.connect(filter);filter.connect(gain);gain.connect(ctx.destination);source.start(t);source.stop(t+duration);
-  if(kind!=='swing'){const osc=ctx.createOscillator(),bass=ctx.createGain();osc.type='triangle';osc.frequency.setValueAtTime(kind==='critical'?105:150,t);osc.frequency.exponentialRampToValueAtTime(42,t+.14);bass.gain.setValueAtTime(kind==='critical'?.09:.06,t);bass.gain.exponentialRampToValueAtTime(.001,t+.2);osc.connect(bass);bass.connect(ctx.destination);osc.start(t);osc.stop(t+.22);}
- }catch{}
+import {weaponStyle} from './choreography';
+let ctx:AudioContext|undefined,master:DynamicsCompressorNode|undefined;
+const playing=new Set<AudioBufferSourceNode>();
+export function stopCombatAudio(){for(const source of playing){try{source.stop();}catch{}}playing.clear();}
+const buffers=new Map<string,AudioBuffer>(),pending=new Map<string,Promise<void>>();
+const clips=['sword-swing','spear-whoosh','metal-impact','heavy-thud','magic-charge','energy-strike','ultimate-crack','ultimate-bass'];
+function context(){if(typeof window==='undefined')return;try{ctx??=new AudioContext();if(!master){master=ctx.createDynamicsCompressor();master.threshold.value=-16;master.knee.value=18;master.ratio.value=5;master.attack.value=.004;master.release.value=.12;master.connect(ctx.destination);}if(ctx.state==='suspended')void ctx.resume();return ctx;}catch{return;}}
+async function load(id:string){const c=context();if(!c||buffers.has(id))return;if(!pending.has(id))pending.set(id,fetch(`/audio/kenney/${id}.mp3`,{cache:'force-cache'}).then(r=>{if(!r.ok)throw new Error('audio');return r.arrayBuffer();}).then(b=>c.decodeAudioData(b)).then(b=>{buffers.set(id,b);}).catch(()=>{}));await pending.get(id);}
+export function prepareCombatAudio(enabled=true){if(!enabled)return;context();for(const id of clips)void load(id);}
+function play(id:string,gain=.3,rate=1){const c=context(),b=buffers.get(id);if(!c)return;if(!b){const started=Date.now();void load(id).then(()=>{if(buffers.has(id)&&Date.now()-started<120)play(id,gain,rate);});return;}const source=c.createBufferSource(),volume=c.createGain();source.buffer=b;source.playbackRate.value=rate;volume.gain.value=gain;source.connect(volume);volume.connect(master!);playing.add(source);source.start();source.onended=()=>{playing.delete(source);source.disconnect();volume.disconnect();};}
+export function combatSound(kind:'swing'|'impact'|'critical'|'heal',element:string,enabled=true,hero=0,ultimate=false){
+ if(!enabled)return;const style=weaponStyle(hero);
+ if(kind==='swing'){play(style==='spell'?'magic-charge':style==='spear'||style==='bow'?'spear-whoosh':'sword-swing',style==='spell'?.14:.22,ultimate?.88:1);return;}
+ if(kind==='heal'){play('magic-charge',.13,1.25);play('energy-strike',.08,1.4);return;}
+ if(ultimate){play('ultimate-crack',.22);play('ultimate-bass',.24);return;}
+ if(style==='spell'){play('energy-strike',.2,element==='ice'?1.15:.96);return;}
+ play(style==='heavy'?'heavy-thud':'metal-impact',kind==='critical'?.35:.24,kind==='critical'?.9:1.05);
+ if(kind==='critical')play('heavy-thud',.18,.86);
+}
+export function sound(kind:'click'|'attack'|'skill'|'combo'|'pull'|'rare'|'win'|'lose',enabled=true){
+ if(!enabled)return;const c=context();if(!c)return;
+ if(kind==='click'){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(500,c.currentTime);g.gain.setValueAtTime(.012,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.035);o.connect(g);g.connect(master!);o.start();o.stop(c.currentTime+.04);return;}
+ if(kind==='attack'){combatSound('impact','wind',true);return;}
+ if(kind==='lose'){play('heavy-thud',.17,.7);return;}
+ if(kind==='win'||kind==='rare'){play('energy-strike',.12,1.3);play('magic-charge',.15,1.1);return;}
+ if(kind==='combo'){play('ultimate-crack',.23);play('ultimate-bass',.2);return;}
+ play('magic-charge',.14,1);
 }
